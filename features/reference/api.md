@@ -1,15 +1,52 @@
 # API Reference
 
-**Status:** empty starter — no application endpoints yet.
+**Status:** Feature 1 — authentication and a protected lists GET.
 
-API mount path defaults to `/api` (see `backend/server.js`). Update this file when endpoints merge to `dev`.
+API mount path: `/todo` (`backend/server.js`). Authenticated routes require `Authorization: Bearer <token>`.
 
 ## Endpoints
 
-*(none)*
+| Method | Path | Auth | Purpose |
+|--------|------|------|---------|
+| `GET` | `/todo/health` | No | Process health check |
+| `POST` | `/todo/register` | No | Create account and start a session |
+| `POST` | `/todo/login` | No | Authenticate and return/reuse a session |
+| `POST` | `/todo/logout` | Yes | Revoke the current session token |
+| `GET` | `/todo/lists` | Yes | Return lists owned by the caller (empty until Feature 2) |
+
+**Login / register success** (`201` register, `200` login) — flat JSON, no envelope:
+
+```json
+{
+  "userId": 1,
+  "username": "jdoe",
+  "email": "jdoe@example.com",
+  "fName": "Jane",
+  "lName": "Doe",
+  "role": "worker",
+  "token": "<jwt>"
+}
+```
+
+Password hashes are never returned.
+
+**Error response:** `{ "message": "Human-readable explanation." }` with HTTP `400`, `401`, or `500`.
+
+| Status | Example message |
+|--------|-----------------|
+| `400` | `Username is already taken.` / `Email is already registered.` / `Email is required.` / `Password must be at least 8 characters.` |
+| `401` login | `Invalid username or password.` |
+| `401` protected | `Unauthorized! No token provided.` / `Unauthorized! Invalid or expired token.` |
 
 ## Conventions
 
 - Flat JSON responses (no `{ success, data }` envelope).
 - Errors: `{ "message": "..." }`.
-- Authenticated routes: `Authorization: Bearer <token>` (when Feature auth is implemented).
+- Authenticated routes: `Authorization: Bearer <token>`.
+
+## Feature provenance
+
+| Area | Introduced |
+|------|------------|
+| Register, login, logout | Feature 1 |
+| Protected `GET /todo/lists` (empty payload until list CRUD) | Feature 1 |
