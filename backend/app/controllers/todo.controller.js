@@ -24,6 +24,36 @@ const titleError = (title) => {
   return null;
 };
 
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+const INVALID_DUE_DATE = "Due date must be a valid date in YYYY-MM-DD format.";
+
+const parseDueDate = (value) => {
+  if (value === undefined) {
+    return { omitted: true };
+  }
+
+  if (value === null || value === "") {
+    return { value: null };
+  }
+
+  if (typeof value !== "string" || !DATE_ONLY.test(value)) {
+    return { error: INVALID_DUE_DATE };
+  }
+
+  const [year, month, day] = value.split("-").map(Number);
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+
+  if (
+    parsed.getUTCFullYear() !== year ||
+    parsed.getUTCMonth() !== month - 1 ||
+    parsed.getUTCDate() !== day
+  ) {
+    return { error: INVALID_DUE_DATE };
+  }
+
+  return { value };
+};
+
 const listNotFound = (id) => ({ message: `List with id=${id} not found.` });
 const todoNotFound = (id) => ({ message: `Todo with id=${id} not found.` });
 
@@ -73,6 +103,12 @@ exports.createForList = async (req, res) => {
     return res.status(400).send({ message: invalid });
   }
 
+  const dueDateResult = parseDueDate(req.body.dueDate);
+
+  if (dueDateResult.error) {
+    return res.status(400).send({ message: dueDateResult.error });
+  }
+
   try {
     const list = await getAccessibleListOrNull(req, listId);
 
@@ -85,6 +121,7 @@ exports.createForList = async (req, res) => {
       listId: list.id,
       userId: req.user.id,
       completed: false,
+      dueDate: dueDateResult.omitted ? null : dueDateResult.value,
     });
     return res.status(201).send(todo);
   } catch (err) {
@@ -120,6 +157,16 @@ exports.update = async (req, res) => {
 
     if (Object.prototype.hasOwnProperty.call(req.body, "completed")) {
       todo.completed = Boolean(req.body.completed);
+    }
+
+    if (Object.prototype.hasOwnProperty.call(req.body, "dueDate")) {
+      const dueDateResult = parseDueDate(req.body.dueDate);
+
+      if (dueDateResult.error) {
+        return res.status(400).send({ message: dueDateResult.error });
+      }
+
+      todo.dueDate = dueDateResult.value;
     }
 
     await todo.save();

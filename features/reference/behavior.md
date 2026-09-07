@@ -1,6 +1,6 @@
 # Behavior & Rules Reference
 
-**Living snapshot** of product rules currently in force (Features 1–4).
+**Living snapshot** of product rules currently in force (Features 1–5).
 
 | Rule | Enforcement | Introduced |
 |------|-------------|------------|
@@ -34,6 +34,10 @@
 | Optional password on profile `PUT`; min 8 chars; bcrypt; never returned | User controller | Feature 4 |
 | After profile save, refresh `localStorage` `user` and `user-logged-in` | `MenuBar.vue` | Feature 4 |
 | Edit Profile uses shared `emailRules` | `MenuBar.vue` + `validation.js` | Feature 4 |
+| `dueDate` optional; `null` = none; API calendar-only `YYYY-MM-DD` | Todo model + controller | Feature 5 |
+| Invalid `dueDate` → **`400`** `"Due date must be a valid date in YYYY-MM-DD format."` | Todo controller | Feature 5 |
+| `PUT` omit `dueDate` leaves it; `null` clears it | Todo update | Feature 5 |
+| Incomplete todos with `dueDate` before today (local calendar) use overdue styling; completed do not | `isTodoOverdue` + list-items dialog | Feature 5 |
 
 These files answer: *"What rules does the app enforce right now?"*  
 They do **not** authorize new scope — implement only from `features/feature-*.md`.
