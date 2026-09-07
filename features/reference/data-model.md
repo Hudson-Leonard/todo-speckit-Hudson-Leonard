@@ -1,6 +1,6 @@
 # Data Model Reference
 
-**Status:** Feature 1 — users and sessions.
+**Status:** Features 1–2 — users, sessions, and lists.
 
 ## Tables
 
@@ -30,13 +30,26 @@
 | `createdAt` | DATE | Sequelize timestamps |
 | `updatedAt` | DATE | Sequelize timestamps |
 
+### `lists`
+
+| Field | Type | Rules |
+|-------|------|-------|
+| `id` | INTEGER PK | Auto-increment |
+| `name` | STRING | Required; trimmed; max 100 characters |
+| `userId` | INTEGER FK | Required; references `users.id`; set from `req.user.id` on create |
+| `createdAt` | DATE | Sequelize timestamps |
+| `updatedAt` | DATE | Sequelize timestamps |
+
 ## Associations
 
 *   `User hasMany Session` (`foreignKey: userId`)
 *   `Session belongsTo User`
+*   `User hasMany List` (`foreignKey: userId`)
+*   `List belongsTo User`
 
 ## Feature provenance
 
 | Area | Introduced |
 |------|------------|
 | `users`, `sessions` | Feature 1 |
+| `lists` | Feature 2 |

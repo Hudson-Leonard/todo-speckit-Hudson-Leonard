@@ -1,6 +1,6 @@
 # Behavior & Rules Reference
 
-**Living snapshot** of product rules currently in force (Feature 1).
+**Living snapshot** of product rules currently in force (Features 1–2).
 
 | Rule | Enforcement | Introduced |
 |------|-------------|------------|
@@ -17,8 +17,12 @@
 | Failed login (wrong user or password): **`401`** `"Invalid username or password."` | Login controller | Feature 1 |
 | Browser session stored under `localStorage` key **`user`** | `Utils.setStore` | Feature 1 |
 | Guest routes `login` / `register`; signed-in users hitting them go **home**; no session on home → **login** | `router.beforeEach` | Feature 1 |
-| Auth screens have **no MenuBar**; home is a welcome placeholder with **Sign out** | `App.vue` + `Home.vue` | Feature 1 |
-| `GET /todo/lists` is authenticated and returns **only the caller's lists** (currently `[]` until Feature 2) | `authenticate` + list controller | Feature 1 |
+| Auth screens have **no MenuBar**; signed-in chrome is `MenuBar` with the user's name and **Sign out** | `App.vue` + `MenuBar.vue` | Feature 2 |
+| `GET /todo/lists` returns **only the caller's lists**, sorted **A–Z by name** | `authenticate` + `List.findAll` | Features 1–2 |
+| List `userId` always from `req.user.id`; ignore body `userId` | List create controller | Feature 2 |
+| Cross-user list access → **`404`**, never `403` | `getAccessibleListOrNull` | Feature 2; ADR-0002 |
+| Empty/whitespace list name rejected (**"List name is required."**); max **100** characters | Client rules + `400` | Feature 2 |
+| Dashboard heading **My Lists**; empty copy **"No lists yet. Create your first list."** | `Dashboard.vue` | Feature 2 |
 
 These files answer: *"What rules does the app enforce right now?"*  
 They do **not** authorize new scope — implement only from `features/feature-*.md`.
