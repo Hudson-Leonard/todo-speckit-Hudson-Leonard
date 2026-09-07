@@ -31,3 +31,4 @@ They do **not** authorize new scope — implement only from `features/feature-*.
 |------|------------|
 | Auth API, users/sessions, session UX | Feature 1 |
 | Lists table, list CRUD, dashboard + MenuBar | Feature 2 |
+| Todos table, item dialogs, cascade delete | Feature 3 |

@@ -1,6 +1,6 @@
 # Behavior & Rules Reference
 
-**Living snapshot** of product rules currently in force (Features 1–2).
+**Living snapshot** of product rules currently in force (Features 1–3).
 
 | Rule | Enforcement | Introduced |
 |------|-------------|------------|
@@ -23,6 +23,13 @@
 | Cross-user list access → **`404`**, never `403` | `getAccessibleListOrNull` | Feature 2; ADR-0002 |
 | Empty/whitespace list name rejected (**"List name is required."**); max **100** characters | Client rules + `400` | Feature 2 |
 | Dashboard heading **My Lists**; empty copy **"No lists yet. Create your first list."** | `Dashboard.vue` | Feature 2 |
+| Todos belong to one list and one user; create uses server `listId` + `req.user.id` | Todo controller | Feature 3 |
+| Cross-user todo or parent list → **`404`** | `getAccessibleListOrNull` / `getAccessibleTodoOrNull` | Feature 3; ADR-0002 |
+| New todos `completed: false`; empty title **"Todo title is required."**; max **255** | Create/update + client rules | Feature 3 |
+| Todo order: **incomplete first**, then `createdAt` ascending | `findAll` order | Feature 3 |
+| Deleting a list deletes its todos | `Todo.destroy` then list destroy | Feature 3 |
+| List rows have **Items**; todos managed in dialogs; empty **"No todos in this list yet."** | `Dashboard.vue` | Feature 3 |
+| Completed todos are struck-through / muted | List-items dialog | Feature 3 |
 
 These files answer: *"What rules does the app enforce right now?"*  
 They do **not** authorize new scope — implement only from `features/feature-*.md`.

@@ -102,6 +102,7 @@ exports.delete = async (req, res) => {
       return res.status(404).send(notFound(listId));
     }
 
+    await db.todo.destroy({ where: { listId: list.id } });
     await list.destroy();
     return res.status(200).send({ message: "List was deleted successfully." });
   } catch (err) {

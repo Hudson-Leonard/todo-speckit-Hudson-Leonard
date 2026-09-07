@@ -1,6 +1,6 @@
 # API Reference
 
-**Status:** Features 1–2 — authentication and list CRUD.
+**Status:** Features 1–3 — authentication, lists, and todos.
 
 API mount path: `/todo` (`backend/server.js`). Authenticated routes require `Authorization: Bearer <token>`.
 
@@ -15,7 +15,27 @@ API mount path: `/todo` (`backend/server.js`). Authenticated routes require `Aut
 | `GET` | `/todo/lists` | Yes | Fetch lists owned by the caller, A–Z by name |
 | `POST` | `/todo/lists` | Yes | Create a list owned by the caller |
 | `PUT` | `/todo/lists/:listId` | Yes | Rename an owned list |
-| `DELETE` | `/todo/lists/:listId` | Yes | Delete an owned list |
+| `DELETE` | `/todo/lists/:listId` | Yes | Delete an owned list (todos cascade) |
+| `GET` | `/todo/lists/:listId/todos` | Yes | Fetch todos in an owned list |
+| `POST` | `/todo/lists/:listId/todos` | Yes | Add a todo to an owned list |
+| `PUT` | `/todo/todos/:id` | Yes | Update title and/or `completed` |
+| `DELETE` | `/todo/todos/:id` | Yes | Delete an owned todo |
+
+**Create todo request:** `{ "title": "Buy milk" }` (`userId` / `listId` in the body are ignored).
+
+**Todo success** (`200` / `201`):
+
+```json
+{
+  "id": 10,
+  "listId": 1,
+  "title": "Buy milk",
+  "completed": false,
+  "userId": 42,
+  "createdAt": "2026-07-02T12:05:00.000Z",
+  "updatedAt": "2026-07-02T12:05:00.000Z"
+}
+```
 
 **Create list request:** `{ "name": "Groceries" }` (`userId` in the body is ignored).
 
@@ -55,7 +75,8 @@ Password hashes are never returned.
 | `401` login | `Invalid username or password.` |
 | `401` protected | `Unauthorized! No token provided.` / `Unauthorized! Invalid or expired token.` |
 | `400` | `List name is required.` / `List name must be 100 characters or fewer.` |
-| `404` lists | `List with id=<id> not found.` (unowned or missing; never `403`) |
+| `400` | `Todo title is required.` / `Todo title must be 255 characters or fewer.` |
+| `404` todos | `Todo with id=<id> not found.` / `List with id=<id> not found.` |
 
 ## Conventions
 
@@ -70,3 +91,4 @@ Password hashes are never returned.
 | Register, login, logout | Feature 1 |
 | Protected `GET /todo/lists` | Feature 1 |
 | List CRUD `POST` / `PUT` / `DELETE /todo/lists` | Feature 2 |
+| Todo nested and `/todo/todos/:id` | Feature 3 |

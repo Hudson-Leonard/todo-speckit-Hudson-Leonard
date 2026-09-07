@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import ListServices from "../services/listServices.js";
+import TodoServices from "../services/todoServices.js";
 
 const lists = ref([]);
 const loading = ref(false);
@@ -18,7 +19,26 @@ const editingList = ref(null);
 const deleteDialog = ref(false);
 const deletingList = ref(null);
 
+const itemsDialog = ref(false);
+const itemsList = ref(null);
+const todos = ref([]);
+const todosLoading = ref(false);
+const todoError = ref("");
+
+const addTodoDialog = ref(false);
+const addTodoForm = ref(null);
+const newTodoTitle = ref("");
+
+const editTodoDialog = ref(false);
+const editTodoForm = ref(null);
+const editTodoTitle = ref("");
+const editingTodo = ref(null);
+
+const deleteTodoDialog = ref(false);
+const deletingTodo = ref(null);
+
 const nameRules = [(value) => !!value?.trim() || "List name is required."];
+const titleRules = [(value) => !!value?.trim() || "Todo title is required."];
 
 const loadLists = async () => {
   loading.value = true;
@@ -95,6 +115,109 @@ const confirmDelete = async () => {
   }
 };
 
+const loadTodos = async () => {
+  if (!itemsList.value) {
+    return;
+  }
+
+  todosLoading.value = true;
+  todoError.value = "";
+
+  try {
+    const res = await TodoServices.getTodos(itemsList.value.id);
+    todos.value = res.data;
+  } catch (err) {
+    todoError.value = err.response?.data?.message || "Unable to load todos.";
+  } finally {
+    todosLoading.value = false;
+  }
+};
+
+const openItems = async (list) => {
+  itemsList.value = list;
+  todos.value = [];
+  todoError.value = "";
+  itemsDialog.value = true;
+  await loadTodos();
+};
+
+const closeItems = () => {
+  itemsDialog.value = false;
+  addTodoDialog.value = false;
+  editTodoDialog.value = false;
+  deleteTodoDialog.value = false;
+};
+
+const openAddTodo = () => {
+  newTodoTitle.value = "";
+  todoError.value = "";
+  addTodoDialog.value = true;
+};
+
+const createTodo = async () => {
+  const { valid } = await addTodoForm.value.validate();
+
+  if (!valid) {
+    return;
+  }
+
+  try {
+    await TodoServices.createTodo(itemsList.value.id, { title: newTodoTitle.value.trim() });
+    addTodoDialog.value = false;
+    await loadTodos();
+  } catch (err) {
+    todoError.value = err.response?.data?.message || "Unable to add todo.";
+  }
+};
+
+const toggleTodo = async (todo, completed) => {
+  try {
+    await TodoServices.updateTodo(todo.id, { completed });
+    await loadTodos();
+  } catch (err) {
+    todoError.value = err.response?.data?.message || "Unable to update todo.";
+  }
+};
+
+const openEditTodo = (todo) => {
+  editingTodo.value = todo;
+  editTodoTitle.value = todo.title;
+  todoError.value = "";
+  editTodoDialog.value = true;
+};
+
+const saveTodo = async () => {
+  const { valid } = await editTodoForm.value.validate();
+
+  if (!valid) {
+    return;
+  }
+
+  try {
+    await TodoServices.updateTodo(editingTodo.value.id, { title: editTodoTitle.value.trim() });
+    editTodoDialog.value = false;
+    await loadTodos();
+  } catch (err) {
+    todoError.value = err.response?.data?.message || "Unable to rename todo.";
+  }
+};
+
+const openDeleteTodo = (todo) => {
+  deletingTodo.value = todo;
+  todoError.value = "";
+  deleteTodoDialog.value = true;
+};
+
+const confirmDeleteTodo = async () => {
+  try {
+    await TodoServices.deleteTodo(deletingTodo.value.id);
+    deleteTodoDialog.value = false;
+    await loadTodos();
+  } catch (err) {
+    todoError.value = err.response?.data?.message || "Unable to delete todo.";
+  }
+};
+
 onMounted(loadLists);
 </script>
 
@@ -118,6 +241,13 @@ onMounted(loadLists);
     <v-list v-else>
       <v-list-item v-for="list in lists" :key="list.id" :title="list.name">
         <template #append>
+          <v-btn
+            icon="mdi-format-list-bulleted"
+            size="small"
+            variant="text"
+            :aria-label="`View items for ${list.name}`"
+            @click="openItems(list)"
+          />
           <v-btn
             icon="mdi-pencil"
             size="small"
@@ -176,6 +306,96 @@ onMounted(loadLists);
           <v-spacer />
           <v-btn color="secondary" variant="text" @click="deleteDialog = false">Cancel</v-btn>
           <v-btn color="primary" variant="elevated" class="oc-cta" @click="confirmDelete">Delete</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="itemsDialog" max-width="640">
+      <v-card class="pa-4">
+        <v-card-title>{{ itemsList?.name }} — Items</v-card-title>
+        <v-card-text>
+          <v-alert v-if="todoError" type="error" class="mb-4">{{ todoError }}</v-alert>
+          <v-progress-linear v-if="todosLoading" indeterminate class="mb-4" />
+          <p v-else-if="todos.length === 0" class="text-body-1">No todos in this list yet.</p>
+          <v-list v-else>
+            <v-list-item v-for="todo in todos" :key="todo.id">
+              <template #prepend>
+                <v-checkbox
+                  :model-value="todo.completed"
+                  hide-details
+                  :aria-label="`Complete ${todo.title}`"
+                  @update:model-value="(value) => toggleTodo(todo, value)"
+                />
+              </template>
+              <v-list-item-title :class="{ 'text-decoration-line-through text-medium-emphasis': todo.completed }">
+                {{ todo.title }}
+              </v-list-item-title>
+              <template #append>
+                <v-btn
+                  icon="mdi-pencil"
+                  size="small"
+                  variant="text"
+                  aria-label="Edit todo"
+                  @click="openEditTodo(todo)"
+                />
+                <v-btn
+                  icon="mdi-delete"
+                  size="small"
+                  variant="text"
+                  aria-label="Delete todo"
+                  @click="openDeleteTodo(todo)"
+                />
+              </template>
+            </v-list-item>
+          </v-list>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn color="primary" variant="elevated" class="oc-cta" @click="openAddTodo">+ Add Item</v-btn>
+          <v-spacer />
+          <v-btn color="secondary" variant="text" @click="closeItems">Close</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="addTodoDialog" max-width="480">
+      <v-card class="pa-4">
+        <v-card-title>Add item</v-card-title>
+        <v-card-text>
+          <v-form ref="addTodoForm" @submit.prevent="createTodo">
+            <v-text-field v-model="newTodoTitle" label="Todo title" :rules="titleRules" />
+          </v-form>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn color="secondary" variant="text" @click="addTodoDialog = false">Cancel</v-btn>
+          <v-btn color="primary" variant="elevated" class="oc-cta" @click="createTodo">Add</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="editTodoDialog" max-width="480">
+      <v-card class="pa-4">
+        <v-card-title>Edit item</v-card-title>
+        <v-card-text>
+          <v-form ref="editTodoForm" @submit.prevent="saveTodo">
+            <v-text-field v-model="editTodoTitle" label="Todo title" :rules="titleRules" />
+          </v-form>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn color="secondary" variant="text" @click="editTodoDialog = false">Cancel</v-btn>
+          <v-btn color="primary" variant="elevated" class="oc-cta" @click="saveTodo">Save</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="deleteTodoDialog" max-width="480">
+      <v-card class="pa-4">
+        <v-card-title>Delete item</v-card-title>
+        <v-card-text>Delete “{{ deletingTodo?.title }}”?</v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn color="secondary" variant="text" @click="deleteTodoDialog = false">Cancel</v-btn>
+          <v-btn color="primary" variant="elevated" class="oc-cta" @click="confirmDeleteTodo">Delete</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
