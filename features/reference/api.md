@@ -1,6 +1,6 @@
 # API Reference
 
-**Status:** Features 1–3 — authentication, lists, and todos.
+**Status:** Features 1–4 — authentication, lists, todos, and profile.
 
 API mount path: `/todo` (`backend/server.js`). Authenticated routes require `Authorization: Bearer <token>`.
 
@@ -20,6 +20,25 @@ API mount path: `/todo` (`backend/server.js`). Authenticated routes require `Aut
 | `POST` | `/todo/lists/:listId/todos` | Yes | Add a todo to an owned list |
 | `PUT` | `/todo/todos/:id` | Yes | Update title and/or `completed` |
 | `DELETE` | `/todo/todos/:id` | Yes | Delete an owned todo |
+| `GET` | `/todo/users/:id` | Yes | Fetch own profile (`:id` must match session) |
+| `PUT` | `/todo/users/:id` | Yes | Update own profile; password optional |
+
+**Profile success** (`200`):
+
+```json
+{
+  "id": 42,
+  "fName": "Jane",
+  "lName": "Doe",
+  "email": "jane@example.com",
+  "username": "jdoe",
+  "role": "worker",
+  "createdAt": "2026-07-02T12:00:00.000Z",
+  "updatedAt": "2026-07-02T12:05:00.000Z"
+}
+```
+
+`password` is optional on `PUT`. Omit it to leave the hash unchanged. Responses never include the password hash.
 
 **Create todo request:** `{ "title": "Buy milk" }` (`userId` / `listId` in the body are ignored).
 
@@ -77,6 +96,7 @@ Password hashes are never returned.
 | `400` | `List name is required.` / `List name must be 100 characters or fewer.` |
 | `400` | `Todo title is required.` / `Todo title must be 255 characters or fewer.` |
 | `404` todos | `Todo with id=<id> not found.` / `List with id=<id> not found.` |
+| `404` users | `User with id=<id> not found.` (not self; never `403`) |
 
 ## Conventions
 
@@ -92,3 +112,4 @@ Password hashes are never returned.
 | Protected `GET /todo/lists` | Feature 1 |
 | List CRUD `POST` / `PUT` / `DELETE /todo/lists` | Feature 2 |
 | Todo nested and `/todo/todos/:id` | Feature 3 |
+| Profile `GET`/`PUT /todo/users/:id` | Feature 4 |

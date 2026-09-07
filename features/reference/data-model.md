@@ -1,6 +1,6 @@
 # Data Model Reference
 
-**Status:** Features 1–3 — users, sessions, lists, and todos.
+**Status:** Features 1–4 — users (profile-editable), sessions, lists, and todos.
 
 ## Tables
 
@@ -9,12 +9,12 @@
 | Field | Type | Rules |
 |-------|------|-------|
 | `id` | INTEGER PK | Auto-increment |
-| `fName` | STRING | Required |
-| `lName` | STRING | Required |
-| `email` | STRING | Required, unique |
-| `username` | STRING(100) | Required, unique; stored lowercase |
-| `password` | STRING(255) | Required; bcrypt hash only |
-| `role` | STRING(20) | Default `worker` |
+| `fName` | STRING | Required; editable via profile `PUT` |
+| `lName` | STRING | Required; editable via profile `PUT` |
+| `email` | STRING | Required, unique; editable via profile `PUT` |
+| `username` | STRING(100) | Required, unique; stored lowercase; editable via profile `PUT` |
+| `password` | STRING(255) | Required; bcrypt hash; optional on profile `PUT` |
+| `role` | STRING(20) | Default `worker`; read-only on profile |
 | `createdAt` | DATE | Sequelize timestamps |
 | `updatedAt` | DATE | Sequelize timestamps |
 
@@ -70,3 +70,4 @@
 | `users`, `sessions` | Feature 1 |
 | `lists` | Feature 2 |
 | `todos` | Feature 3 |
+| Profile field updates (no new tables) | Feature 4 |

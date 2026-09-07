@@ -1,6 +1,6 @@
 # Behavior & Rules Reference
 
-**Living snapshot** of product rules currently in force (Features 1–3).
+**Living snapshot** of product rules currently in force (Features 1–4).
 
 | Rule | Enforcement | Introduced |
 |------|-------------|------------|
@@ -17,7 +17,7 @@
 | Failed login (wrong user or password): **`401`** `"Invalid username or password."` | Login controller | Feature 1 |
 | Browser session stored under `localStorage` key **`user`** | `Utils.setStore` | Feature 1 |
 | Guest routes `login` / `register`; signed-in users hitting them go **home**; no session on home → **login** | `router.beforeEach` | Feature 1 |
-| Auth screens have **no MenuBar**; signed-in chrome is `MenuBar` with the user's name and **Sign out** | `App.vue` + `MenuBar.vue` | Feature 2 |
+| Auth screens have **no MenuBar**; signed-in chrome is a user-icon profile menu (**Log out** in the dropdown; no app-bar **Sign out**) | `MenuBar.vue` | Feature 4 |
 | `GET /todo/lists` returns **only the caller's lists**, sorted **A–Z by name** | `authenticate` + `List.findAll` | Features 1–2 |
 | List `userId` always from `req.user.id`; ignore body `userId` | List create controller | Feature 2 |
 | Cross-user list access → **`404`**, never `403` | `getAccessibleListOrNull` | Feature 2; ADR-0002 |
@@ -30,6 +30,10 @@
 | Deleting a list deletes its todos | `Todo.destroy` then list destroy | Feature 3 |
 | List rows have **Items**; todos managed in dialogs; empty **"No todos in this list yet."** | `Dashboard.vue` | Feature 3 |
 | Completed todos are struck-through / muted | List-items dialog | Feature 3 |
+| Profile read/update only when `:id === req.user.id`; else **`404`** | `getAccessibleUserOrNull` | Feature 4 |
+| Optional password on profile `PUT`; min 8 chars; bcrypt; never returned | User controller | Feature 4 |
+| After profile save, refresh `localStorage` `user` and `user-logged-in` | `MenuBar.vue` | Feature 4 |
+| Edit Profile uses shared `emailRules` | `MenuBar.vue` + `validation.js` | Feature 4 |
 
 These files answer: *"What rules does the app enforce right now?"*  
 They do **not** authorize new scope — implement only from `features/feature-*.md`.
